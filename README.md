@@ -1,3 +1,15 @@
+# SQL Queries
+To see the result of SQL queries Start the Docker containers:
+
+```
+docker-compose up
+```
+Execute the SQL queries from the task_queries.sql file:
+
+```
+docker exec -it pagila psql -U postgres -d pagila -f task_queries.sql
+```
+
 # Pagila
 
 Pagila started as a port of the [Sakila](https://dev.mysql.com/doc/sakila/en/) example database available for MySQL, which was
