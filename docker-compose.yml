@@ -6,7 +6,8 @@ services:
     image: postgres:13.2
     container_name: pagila
     environment:
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: pagila
+      POSTGRES_PASSWORD: root
       POSTGRES_USER: postgres
     volumes:
       - ./pagila-schema.sql:/docker-entrypoint-initdb.d/1-pagila-schema.sql
