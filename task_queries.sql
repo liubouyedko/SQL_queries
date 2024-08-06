@@ -136,7 +136,7 @@ WITH RentalHours AS (
             ON fc.category_id = cat.category_id
     GROUP BY cat.name, city.city 
 ),
-CategoryHours AS (
+CategoryHoursA AS (
     SELECT 
         category_name,
         SUM(total_hours) AS category_total_hours
@@ -152,21 +152,30 @@ CategoryHoursDash AS (
     WHERE city_name LIKE '%-%'
     GROUP BY category_name
 ),
-TopCategoryHours AS (
+MaxCategoryA AS (
     SELECT 
         category_name,
         category_total_hours
-    FROM CategoryHours
-    UNION ALL
+    FROM CategoryHoursA
+    ORDER BY category_total_hours DESC
+    LIMIT 1
+),
+MaxCategoryDash AS (
     SELECT
         category_name,
         category_total_hours
     FROM CategoryHoursDash
-),
-MaxCategoryHours AS (
-    SELECT category_name, category_total_hours
-    FROM TopCategoryHours
     ORDER BY category_total_hours DESC
-    LIMIT 2
+    LIMIT 1
 )
-SELECT * FROM MaxCategoryHours;
+SELECT 
+    'City starting with A' AS category_type,
+    category_name,
+    category_total_hours
+FROM MaxCategoryA
+UNION ALL
+SELECT 
+    'City with Dash' AS category_type,
+    category_name,
+    category_total_hours
+FROM MaxCategoryDash;
