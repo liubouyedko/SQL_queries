@@ -7,14 +7,15 @@ FROM category
     LEFT JOIN film
         ON film_category.film_id = film.film_id
 GROUP BY category.name
-ORDER BY COUNT(film.film_id);
+ORDER BY COUNT(film.film_id) DESC;
 
 
 
 SELECT 
     a.actor_id, 
     a.first_name, 
-    a.last_name, COUNT(r.inventory_id) AS rent_count
+    a.last_name, 
+    COUNT(r.inventory_id) AS rent_count
 FROM actor AS a
     LEFT JOIN film_actor AS fa 
         ON a.actor_id = fa.actor_id
@@ -24,7 +25,7 @@ FROM actor AS a
         ON f.film_id = i.film_id
     LEFT JOIN rental AS r
         ON i.inventory_id = r.inventory_id
-GROUP BY a.actor_id
+GROUP BY a.actor_id, a.first_name, a.last_name
 ORDER BY COUNT(r.inventory_id) DESC
 LIMIT 10;
 
@@ -44,7 +45,7 @@ FROM category AS c
         ON i.inventory_id = r.inventory_id
     LEFT JOIN payment AS p
         ON r.rental_id = p.rental_id
-GROUP BY c.category_id
+GROUP BY c.category_id, c.name
 ORDER BY total_amount_of_money DESC
 LIMIT 1;
 
@@ -54,9 +55,12 @@ SELECT
     f.film_id,
     f.title
 FROM film AS f
-    LEFT JOIN inventory AS i
-        ON f.film_id = i.film_id
-WHERE i.film_id IS NULL;
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM inventory as i
+    WHERE f.film_id = i.film_id
+);
+
 
 
 WITH ActorFilmCount AS (
@@ -83,7 +87,7 @@ ranked_actors AS (
         first_name,
         last_name,
         amount_of_children_films,
-        RANK() OVER (ORDER BY amount_of_children_films DESC) AS rk 
+        DENSE_RANK() OVER (ORDER BY amount_of_children_films DESC) AS rk 
     FROM ActorFilmCount
 )
 SELECT 
@@ -148,23 +152,21 @@ CategoryHoursDash AS (
     WHERE city_name LIKE '%-%'
     GROUP BY category_name
 ),
-MaxCategoryHours AS (
+TopCategoryHours AS (
     SELECT 
-        'Cities starting with A' AS category_type,
         category_name,
         category_total_hours
     FROM CategoryHours
-    WHERE category_total_hours = (
-        SELECT MAX(category_total_hours) FROM CategoryHours
-    )
     UNION ALL
     SELECT
-        'Cities containing dash' AS category_type,
         category_name,
         category_total_hours
     FROM CategoryHoursDash
-    WHERE category_total_hours = (
-        SELECT MAX(category_total_hours) FROM CategoryHoursDash
-    )
+),
+MaxCategoryHours AS (
+    SELECT category_name, category_total_hours
+    FROM TopCategoryHours
+    ORDER BY category_total_hours DESC
+    LIMIT 2
 )
 SELECT * FROM MaxCategoryHours;
